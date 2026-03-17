@@ -1,0 +1,636 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Builders Guild — Sustainability Benchmarking</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=DM+Mono:wght@400;500&family=DM+Sans:wght@300;400;500;600&display=swap');
+:root{--bg:#0f1117;--surface:#1a1d26;--surface2:#22263a;--border:#2e3250;--accent:#4f7cff;--accent2:#7c5cfc;--green:#22c55e;--amber:#f59e0b;--red:#ef4444;--text:#e8eaf6;--muted:#7b82a8;--mono:'DM Mono',monospace;--sans:'DM Sans',sans-serif}
+*{box-sizing:border-box;margin:0;padding:0}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);font-size:14px;min-height:100vh;line-height:1.5}
+.header{padding:20px 32px 16px;border-bottom:1px solid var(--border);display:flex;align-items:center;gap:16px}
+.logo{width:32px;height:32px;background:linear-gradient(135deg,var(--accent),var(--accent2));border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:16px;font-weight:600;color:white;flex-shrink:0}
+.header h1{font-size:15px;font-weight:600}
+.header span{font-size:12px;color:var(--muted);font-family:var(--mono)}
+.steps-bar{display:flex;padding:0 32px;border-bottom:1px solid var(--border);background:var(--surface)}
+.step-tab{padding:12px 20px;font-size:12px;font-family:var(--mono);color:var(--muted);border-bottom:2px solid transparent;white-space:nowrap;display:flex;align-items:center;gap:8px;transition:color 0.2s}
+.step-tab.active{color:var(--accent);border-bottom-color:var(--accent)}
+.step-tab.done{color:var(--green)}
+.step-num{width:18px;height:18px;border-radius:50%;border:1px solid currentColor;display:flex;align-items:center;justify-content:center;font-size:10px;flex-shrink:0}
+.step-tab.done .step-num{background:var(--green);border-color:var(--green);color:#000;font-size:11px}
+.main{padding:28px 32px;max-width:900px}
+.section{display:none}.section.active{display:block}
+.label{font-size:11px;font-family:var(--mono);color:var(--muted);text-transform:uppercase;letter-spacing:0.08em;margin-bottom:6px}
+input[type=text],textarea,select{background:var(--surface);border:1px solid var(--border);border-radius:8px;color:var(--text);font-family:var(--sans);font-size:14px;padding:10px 14px;width:100%;outline:none;transition:border-color 0.2s}
+input[type=text]:focus,textarea:focus{border-color:var(--accent)}
+textarea{resize:vertical;min-height:90px}
+.row{display:flex;gap:16px;margin-bottom:18px}.col{flex:1}
+.year-row{display:flex;gap:12px}.year-row input{width:100px;flex:none}
+.btn{padding:10px 22px;border-radius:8px;border:none;font-family:var(--sans);font-size:13px;font-weight:500;cursor:pointer;transition:all 0.15s;display:inline-flex;align-items:center;gap:8px}
+.btn-primary{background:var(--accent);color:white}.btn-primary:hover{background:#3d6be8}.btn-primary:disabled{opacity:.4;cursor:not-allowed}
+.btn-secondary{background:var(--surface2);color:var(--text);border:1px solid var(--border)}.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-ghost{background:transparent;color:var(--muted);border:1px solid var(--border)}.btn-ghost:hover{color:var(--text);border-color:var(--text)}
+.btn-green{background:var(--green);color:#000;font-weight:600}
+.company-card{background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px 16px;margin-bottom:10px}
+.company-card .top{display:flex;align-items:center;gap:10px;margin-bottom:8px}
+.badge{font-size:11px;font-family:var(--mono);padding:2px 8px;border-radius:4px;font-weight:500}
+.badge-green{background:rgba(34,197,94,.15);color:var(--green)}.badge-amber{background:rgba(245,158,11,.15);color:var(--amber)}
+.badge-red{background:rgba(239,68,68,.15);color:var(--red)}.badge-blue{background:rgba(79,124,255,.15);color:var(--accent)}.badge-gray{background:var(--surface2);color:var(--muted)}
+.url-input-row{display:flex;gap:8px;align-items:center}.url-input-row input{flex:1;font-size:12px;font-family:var(--mono)}
+.status-dot{width:8px;height:8px;border-radius:50%;flex-shrink:0}
+.dot-green{background:var(--green)}.dot-amber{background:var(--amber)}.dot-gray{background:var(--muted)}
+.progress-bar{height:3px;background:var(--border);border-radius:2px;overflow:hidden;margin:12px 0}
+.progress-fill{height:100%;background:linear-gradient(90deg,var(--accent),var(--accent2));border-radius:2px;transition:width 0.4s ease;width:0%}
+.log-box{background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:12px 14px;font-family:var(--mono);font-size:12px;color:var(--muted);max-height:260px;overflow-y:auto;line-height:1.9}
+.log-ok{color:var(--green)}.log-warn{color:var(--amber)}.log-err{color:var(--red)}.log-info{color:var(--accent)}
+.data-table{width:100%;border-collapse:collapse;font-size:13px}
+.data-table th{text-align:left;padding:8px 12px;font-size:11px;font-family:var(--mono);color:var(--muted);border-bottom:1px solid var(--border);font-weight:500}
+.data-table td{padding:6px 12px;border-bottom:1px solid rgba(46,50,80,.5);vertical-align:top}
+.data-table tr:last-child td{border-bottom:none}
+.data-table td input{background:transparent;border:1px solid transparent;padding:4px 6px;border-radius:4px;font-size:12px;width:100%;color:var(--text)}
+.data-table td input:hover{border-color:var(--border)}.data-table td input:focus{border-color:var(--accent);background:var(--surface2)}
+.checker-panel{background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:16px;margin-top:12px}
+.checker-row{display:flex;align-items:flex-start;gap:10px;padding:6px 0;border-bottom:1px solid rgba(46,50,80,.4);font-size:12px}
+.checker-row:last-child{border-bottom:none}
+.section-title{font-size:18px;font-weight:600;margin-bottom:6px}
+.section-sub{color:var(--muted);margin-bottom:24px;font-size:13px}
+.divider{border:none;border-top:1px solid var(--border);margin:24px 0}
+.tabs{display:flex;gap:4px;margin-bottom:16px;background:var(--surface);border:1px solid var(--border);border-radius:8px;padding:4px;flex-wrap:wrap}
+.tab-btn{padding:7px 14px;border:none;background:transparent;color:var(--muted);font-family:var(--sans);font-size:12px;font-weight:500;border-radius:6px;cursor:pointer;transition:all .15s}
+.tab-btn.active{background:var(--surface2);color:var(--text)}
+.tab-content{display:none}.tab-content.active{display:block}
+.note{background:rgba(79,124,255,.08);border:1px solid rgba(79,124,255,.2);border-radius:8px;padding:10px 14px;font-size:12px;color:var(--muted);margin-bottom:16px;line-height:1.6}
+.note strong{color:var(--accent)}
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid var(--border);border-top-color:var(--accent);border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+@keyframes spin{to{transform:rotate(360deg)}}
+.actions{display:flex;gap:10px;margin-top:24px;flex-wrap:wrap}
+.conf-badge{font-size:10px;font-family:var(--mono);padding:1px 6px;border-radius:3px}
+.conf-high{background:rgba(34,197,94,.15);color:var(--green)}.conf-med{background:rgba(245,158,11,.15);color:var(--amber)}.conf-low{background:rgba(239,68,68,.15);color:var(--red)}
+.error-box{background:rgba(239,68,68,.08);border:1px solid rgba(239,68,68,.25);border-radius:8px;padding:12px 14px;font-size:12px;color:var(--red);margin-bottom:12px;line-height:1.7}
+</style>
+</head>
+<body>
+<div class="header">
+  <div class="logo">B</div>
+  <div>
+    <h1>Builders Guild — Sustainability Benchmarking</h1>
+    <span>v10.1 · split extraction · dual-agent check · Excel + Normative CSV</span>
+  </div>
+</div>
+<div class="steps-bar">
+  <div class="step-tab active" id="tab1"><span class="step-num">1</span>Setup</div>
+  <div class="step-tab" id="tab2"><span class="step-num">2</span>Find Reports</div>
+  <div class="step-tab" id="tab3"><span class="step-num">3</span>Extract</div>
+  <div class="step-tab" id="tab4"><span class="step-num">4</span>Review</div>
+  <div class="step-tab" id="tab5"><span class="step-num">5</span>Export</div>
+</div>
+<div class="main">
+
+<!-- STEP 1 -->
+<div class="section active" id="sec1">
+  <div class="section-title">Engagement setup</div>
+  <div class="section-sub">Enter the client name, competitors, and reporting years.</div>
+  <div class="row">
+    <div class="col"><div class="label">Client name</div><input type="text" id="clientName" placeholder="e.g. Meltwater"/></div>
+    <div class="col"><div class="label">Reporting years</div><div class="year-row"><input type="text" id="year1" value="2023"/><input type="text" id="year2" value="2024"/></div></div>
+  </div>
+  <div style="margin-bottom:18px"><div class="label">Competitors (one per line, leave blank for client only)</div><textarea id="competitors" placeholder="Sprinklr&#10;Hootsuite&#10;Sprout Social&#10;Emplifi&#10;Microsoft&#10;Salesforce"></textarea></div>
+  <div class="actions"><button class="btn btn-primary" onclick="goToStep2()">Continue →</button></div>
+</div>
+
+<!-- STEP 2 -->
+<div class="section" id="sec2">
+  <div class="section-title">Find sustainability reports</div>
+  <div class="section-sub">Cached companies load instantly. Others are searched via web.</div>
+  <div id="companiesList"></div>
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="goTo(1)">← Back</button>
+    <button class="btn btn-primary" onclick="goToStep3()">Approve & extract →</button>
+  </div>
+</div>
+
+<!-- STEP 3 -->
+<div class="section" id="sec3">
+  <div class="section-title">Extracting data</div>
+  <div class="section-sub">3 API calls per company: emissions → scoring → Agent 2 check. Each call is small to avoid timeouts.</div>
+  <div class="progress-bar"><div class="progress-fill" id="extractProgress"></div></div>
+  <div id="extractStatus" style="font-size:12px;color:var(--muted);margin-bottom:12px;font-family:var(--mono)">Waiting…</div>
+  <div class="log-box" id="extractLog"></div>
+  <div class="actions" style="margin-top:16px"><button class="btn btn-secondary" onclick="goTo(2)">← Back</button></div>
+</div>
+
+<!-- STEP 4 -->
+<div class="section" id="sec4">
+  <div class="section-title">Review extracted data</div>
+  <div class="section-sub">Edit any values. Agent 2 flags shown per company.</div>
+  <div class="tabs" id="companyTabs"></div>
+  <div id="companyTabContents"></div>
+  <div class="actions">
+    <button class="btn btn-secondary" onclick="goTo(3)">← Re-extract</button>
+    <button class="btn btn-green" onclick="goToExport()">Export →</button>
+  </div>
+</div>
+
+<!-- STEP 5 -->
+<div class="section" id="sec5">
+  <div class="section-title">Export</div>
+  <div class="section-sub">Download the populated Excel workbook and Normative bulk upload CSV.</div>
+  <div class="note"><strong>Excel:</strong> Fills Builders Guild template with formulas intact. Scores auto-calculate.<br><strong>Normative CSV:</strong> 44-column bulk upload, ready to paste into the platform.</div>
+  <div id="exportLog" class="log-box" style="margin-bottom:16px"></div>
+  <div class="actions">
+    <button class="btn btn-primary" onclick="downloadExcel()">⬇ Download Excel</button>
+    <button class="btn btn-secondary" onclick="downloadCSV()">⬇ Download Normative CSV</button>
+    <button class="btn btn-ghost" onclick="goTo(1)">Start new engagement</button>
+  </div>
+</div>
+
+</div>
+<script>
+// ── STATE ─────────────────────────────────────────────────────────────────────
+const S = { client:'', year1:'2023', year2:'2024', companies:[], extracted:{}, checked:{} };
+
+// ── CACHE ─────────────────────────────────────────────────────────────────────
+const CACHE = {
+  'meltwater':            'https://meltwater-site.cdn.prismic.io/meltwater-site/aMDJEWGNHVfTO5F8_CSRImpactReport2024_FINAL.pdf',
+  'salesforce':           'https://www.salesforce.com/en-us/wp-content/uploads/sites/4/documents/white-papers/salesforce-fy25-stakeholder-impact-report.pdf',
+  'microsoft':            'https://cdn-dynmedia-1.microsoft.com/is/content/microsoftcorp/microsoft/msc/documents/presentations/CSR/2025-Microsoft-Environmental-Sustainability-Report.pdf',
+  'sprinklr':             'https://www.sprinklr.com/wp-content/uploads/2024/06/Sprinklr-ESG-Report-FY2024.pdf',
+  'hootsuite':            'https://www.hootsuite.com/impact',
+  'hootsuite (talkwalker)':'https://www.hootsuite.com/impact',
+  'sprout social':        'https://sproutsocial.com/insights/sprout-social-esg-report/',
+};
+const getCached = n => CACHE[n.toLowerCase().trim()] || null;
+
+// ── NAV ───────────────────────────────────────────────────────────────────────
+function goTo(n){
+  document.querySelectorAll('.section').forEach(s=>s.classList.remove('active'));
+  document.querySelectorAll('.step-tab').forEach(t=>{t.classList.remove('active');t.classList.remove('done')});
+  document.getElementById('sec'+n).classList.add('active');
+  for(let i=1;i<n;i++){
+    const t=document.getElementById('tab'+i);
+    t.classList.add('done');
+    t.querySelector('.step-num').textContent='✓';
+  }
+  document.getElementById('tab'+n).classList.add('active');
+}
+
+// ── STEP 2 ────────────────────────────────────────────────────────────────────
+function goToStep2(){
+  S.client=document.getElementById('clientName').value.trim();
+  S.year1=document.getElementById('year1').value.trim()||'2023';
+  S.year2=document.getElementById('year2').value.trim()||'2024';
+  if(!S.client){alert('Please enter a client name.');return;}
+  const lines=document.getElementById('competitors').value.trim().split('\n').map(s=>s.trim()).filter(Boolean);
+  S.companies=[
+    {name:S.client,role:'client',url:getCached(S.client),status:getCached(S.client)?'cached':'search',notes:''},
+    ...lines.map(n=>({name:n,role:'competitor',url:getCached(n),status:getCached(n)?'cached':'search',notes:''}))
+  ];
+  renderCompanies();
+  goTo(2);
+  searchMissing();
+}
+
+function renderCompanies(){
+  document.getElementById('companiesList').innerHTML=S.companies.map((c,i)=>`
+    <div class="company-card">
+      <div class="top">
+        <div class="status-dot ${c.url?'dot-green':'dot-amber'}"></div>
+        <strong style="flex:1">${c.name}</strong>
+        <span class="badge ${c.role==='client'?'badge-blue':'badge-gray'}">${c.role}</span>
+        <span class="badge ${c.status==='cached'?'badge-green':c.status==='searching'?'badge-amber':c.url?'badge-green':'badge-amber'}">${c.status==='cached'?'📋 cached':c.status==='searching'?'searching…':c.url?'found':'no URL'}</span>
+      </div>
+      <div class="url-input-row">
+        <input type="text" value="${c.url||''}" placeholder="Paste report URL…" oninput="S.companies[${i}].url=this.value;S.companies[${i}].status=this.value?'manual':'none'"/>
+        <button class="btn btn-ghost" style="white-space:nowrap;font-size:11px;padding:6px 12px" onclick="searchOne(${i})">Search</button>
+      </div>
+      <div style="margin-top:8px">
+        <input type="text" value="${c.notes||''}" placeholder="Reviewer notes (optional)" oninput="S.companies[${i}].notes=this.value" style="font-size:12px;color:var(--muted)"/>
+      </div>
+    </div>`).join('');
+}
+
+async function searchMissing(){
+  for(let i=0;i<S.companies.length;i++){
+    if(!S.companies[i].url){
+      S.companies[i].status='searching'; renderCompanies();
+      const u=await searchForReport(S.companies[i].name);
+      S.companies[i].url=u||''; S.companies[i].status=u?'found':'notfound'; renderCompanies();
+    }
+  }
+}
+
+async function searchOne(i){
+  S.companies[i].status='searching'; renderCompanies();
+  const u=await searchForReport(S.companies[i].name);
+  S.companies[i].url=u||''; S.companies[i].status=u?'found':'notfound'; renderCompanies();
+}
+
+async function searchForReport(name){
+  try{
+    const r=await Promise.race([
+      callClaude(`Find the direct PDF URL for the most recent sustainability or ESG report for "${name}". Use web search. Return ONLY the URL as plain text. If not found, return NULL.`,true),
+      timeout(25000)
+    ]);
+    return(r&&r.trim()!=='NULL'&&r.trim().startsWith('http'))?r.trim():null;
+  }catch{return null;}
+}
+
+// ── STEP 3: EXTRACTION ────────────────────────────────────────────────────────
+async function goToStep3(){
+  goTo(3);
+  const logEl=document.getElementById('extractLog');
+  const progEl=document.getElementById('extractProgress');
+  const statEl=document.getElementById('extractStatus');
+  const total=S.companies.length; let done=0;
+
+  function log(msg,cls=''){logEl.innerHTML+=`<div class="${cls?'log-'+cls:''}">${msg}</div>`;logEl.scrollTop=logEl.scrollHeight;}
+
+  for(const co of S.companies){
+    statEl.textContent=`${co.name} (${done+1}/${total})`;
+    log(`━━ ${co.name} ━━`,'info');
+
+    if(!co.url){
+      log(`  ⚠ No URL — skipping`,'warn');
+      S.extracted[co.name]=emptyData(co.name);
+      S.checked[co.name]={confidence:'low',issues:['No report URL'],scope1_check:'skipped',scope2_mb_check:'skipped',scope3_check:'skipped',notes:''};
+      done++; progEl.style.width=(done/total*100)+'%'; continue;
+    }
+
+    // ── Call 1: Emissions ────────────────────────────────────────────────────
+    log(`  [1/3] Emissions extraction…`);
+    let emissionsData=null;
+    let call1err='';
+    for(let attempt=1;attempt<=3;attempt++){
+      try{
+        const raw=await Promise.race([callClaude(emissionsPrompt(co.name,co.url,S.year1,S.year2),true),timeout(90000)]);
+        emissionsData=parseJSON(raw);
+        if(emissionsData){log(`  [1/3] OK`,'ok');break;}
+        else{log(`  [1/3] Bad JSON (attempt ${attempt}) — retrying…`,'warn');call1err='JSON parse failed';}
+      }catch(e){
+        call1err=e.message;
+        if(attempt<3&&(e.message.includes('502')||e.message.includes('503'))){
+          log(`  [1/3] ${e.message} — waiting 4s then retrying…`,'warn');
+          await sleep(4000);
+        }else{log(`  [1/3] Failed: ${e.message}`,'err');break;}
+      }
+    }
+
+    // ── Call 2: Scoring ──────────────────────────────────────────────────────
+    log(`  [2/3] Scoring extraction…`);
+    let scoringData=null;
+    let call2err='';
+    for(let attempt=1;attempt<=3;attempt++){
+      try{
+        const raw=await Promise.race([callClaude(scoringPrompt(co.name,co.url),true),timeout(90000)]);
+        scoringData=parseJSON(raw);
+        if(scoringData){log(`  [2/3] OK`,'ok');break;}
+        else{log(`  [2/3] Bad JSON (attempt ${attempt}) — retrying…`,'warn');call2err='JSON parse failed';}
+      }catch(e){
+        call2err=e.message;
+        if(attempt<3&&(e.message.includes('502')||e.message.includes('503'))){
+          log(`  [2/3] ${e.message} — waiting 4s then retrying…`,'warn');
+          await sleep(4000);
+        }else{log(`  [2/3] Failed: ${e.message}`,'err');break;}
+      }
+    }
+
+    S.extracted[co.name]={...emptyData(co.name),...(emissionsData||{}),...(scoringData||{})};
+
+    // ── Call 3: Agent 2 Check ────────────────────────────────────────────────
+    log(`  [3/3] Agent 2 verification…`);
+    let checkResult={confidence:'low',issues:[],scope1_check:'not checked',scope2_mb_check:'not checked',scope3_check:'not checked',notes:''};
+    if(emissionsData||scoringData){
+      for(let attempt=1;attempt<=2;attempt++){
+        try{
+          const raw=await Promise.race([callClaude(checkPrompt(co.name,co.url,S.extracted[co.name],S.year1,S.year2),true),timeout(90000)]);
+          const parsed=parseJSON(raw);
+          if(parsed){checkResult=parsed;log(`  [3/3] ${checkResult.issues&&checkResult.issues.length?checkResult.issues.length+' issue(s)':'all clear'}`,(checkResult.issues&&checkResult.issues.length)?'warn':'ok');break;}
+          else{log(`  [3/3] Bad JSON (attempt ${attempt})`,'warn');}
+        }catch(e){
+          if(attempt<2&&(e.message.includes('502')||e.message.includes('503'))){log(`  [3/3] ${e.message} — retrying…`,'warn');await sleep(4000);}
+          else{log(`  [3/3] Check failed: ${e.message}`,'warn');break;}
+        }
+      }
+    }else{
+      log(`  [3/3] Skipped — no data to check`,'warn');
+      checkResult.issues.push(`Agent 1 failed: emissions=${call1err||'ok'}, scoring=${call2err||'ok'}`);
+    }
+    S.checked[co.name]=checkResult;
+
+    done++; progEl.style.width=(done/total*100)+'%';
+  }
+
+  statEl.textContent=`Done — ${total} companies processed`;
+  log(`\nAll done. Proceeding to review…`,'ok');
+  setTimeout(()=>{renderReview();goTo(4);},800);
+}
+
+// ── PROMPTS ───────────────────────────────────────────────────────────────────
+function emissionsPrompt(name,url,y1,y2){
+  return `Fetch and read the sustainability report at this URL: ${url}
+
+Extract GHG emissions data for ${name} and return ONLY a valid JSON object — no markdown fences, no explanation, just the JSON.
+
+{"company":"${name}","scope1_${y1}":null,"scope1_${y2}":null,"scope2_mb_${y1}":null,"scope2_mb_${y2}":null,"scope2_lb_${y1}":null,"scope2_lb_${y2}":null,"scope3_total_${y1}":null,"scope3_total_${y2}":null,"s3_cat1_${y1}":null,"s3_cat1_${y2}":null,"s3_cat2_${y1}":null,"s3_cat2_${y2}":null,"s3_cat3_${y1}":null,"s3_cat3_${y2}":null,"s3_cat4_${y1}":null,"s3_cat4_${y2}":null,"s3_cat5_${y1}":null,"s3_cat5_${y2}":null,"s3_cat6_${y1}":null,"s3_cat6_${y2}":null,"s3_cat7_${y1}":null,"s3_cat7_${y2}":null,"s3_cat8_${y1}":null,"s3_cat8_${y2}":null,"revenue_eur_millions":null,"revenue_year":null,"revenue_source":null,"fte":null,"fte_year":null,"fte_source":null,"comment_scope1":"","comment_scope2_mb":"","comment_scope3":""}
+
+Rules: All emissions in tCO2e as numbers. Revenue in million EUR. Use null if not found. Return ONLY the JSON object.`;
+}
+
+function scoringPrompt(name,url){
+  return `Fetch and read the sustainability report at this URL: ${url}
+
+Answer these scoring questions about ${name} and return ONLY a valid JSON object — no markdown fences, no explanation, just the JSON.
+
+{"cdp_above_f":"No","cdp_score":"No data","public_report":"Yes","public_inventory":null,"upstream_s3_complete":null,"downstream_s3_complete":null,"s3_applicability":null,"s3_methodology":null,"s1s2_targets":null,"s3_targets":null,"sbti_near":null,"sbti_netzero":null,"s1_reductions":null,"s2_reductions":null,"s3_reductions":null,"reported_progress":null,"detail_public_inventory":"","detail_upstream_s3":"","detail_downstream_s3":"","detail_s3_applicability":"","detail_s3_methodology":"","detail_s1s2_targets":"","detail_s3_targets":"","detail_sbti_near":"","detail_sbti_netzero":"","detail_s1_reductions":"","detail_s2_reductions":"","detail_s3_reductions":"","detail_progress":"","source_public_report":"","source_public_inventory":"","source_upstream_s3":"","source_downstream_s3":""}
+
+ANSWER OPTIONS — use exactly these strings:
+cdp_above_f: "Yes" or "No" (only Yes if CDP disclosure mentioned in their OWN report)
+cdp_score: "A","B","C","D","E","F","No data" (only if mentioned in their own report)
+public_report/public_inventory/upstream_s3_complete/downstream_s3_complete/s3_applicability/s3_methodology/s1s2_targets/s3_targets: "Yes" or "No"
+sbti_near/sbti_netzero: "Yes","Aligned","Committed","Removed","No"
+s1_reductions/s2_reductions/s3_reductions: "Reached target","Over 75%","Over 50%","Over 25%","Over 10%","0-10%","Increase"
+reported_progress: "All 3 scopes","2 scopes","1 scope","None"
+
+Return ONLY the JSON object.`;
+}
+
+function checkPrompt(name,url,data,y1,y2){
+  const s1=data[`scope1_${y2}`], s2=data[`scope2_mb_${y2}`], s3=data[`scope3_total_${y2}`];
+  return `You are verifying data extracted from a sustainability report.
+
+Company: ${name}
+Report URL: ${url}
+Agent 1 extracted for ${y2}: Scope1=${s1}, Scope2_MB=${s2}, Scope3_total=${s3}
+Scoring: cdp_above_f=${data.cdp_above_f}, sbti_near=${data.sbti_near}, reported_progress=${data.reported_progress}
+
+Fetch the report and verify these specific figures. Return ONLY a valid JSON object — no markdown, no explanation:
+
+{"confidence":"high","scope1_check":"ok","scope2_mb_check":"ok","scope3_check":"ok","scoring_check":"ok","issues":[],"notes":""}
+
+confidence: "high" if figures match, "medium" if minor discrepancy, "low" if major errors
+For each check field: "ok" if correct, or "differs: found X" if wrong
+issues: array of strings describing problems (empty array [] if none)
+Return ONLY the JSON object.`;
+}
+
+// ── CLAUDE API ────────────────────────────────────────────────────────────────
+async function callClaude(content,useSearch=false){
+  const body={model:'claude-sonnet-4-20250514',max_tokens:1500,messages:[{role:'user',content}]};
+  if(useSearch)body.tools=[{type:'web_search_20250305',name:'web_search'}];
+  const resp=await fetch('https://api.anthropic.com/v1/messages',{
+    method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)
+  });
+  if(!resp.ok)throw new Error(`API error: ${resp.status} ${resp.statusText}`);
+  const data=await resp.json();
+  return data.content.filter(b=>b.type==='text').map(b=>b.text).join('\n');
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function parseJSON(raw){
+  if(!raw)return null;
+  // Strip markdown fences if present
+  let s=raw.replace(/```json\s*/gi,'').replace(/```\s*/g,'').trim();
+  // Find first { and last }
+  const start=s.indexOf('{'), end=s.lastIndexOf('}');
+  if(start===-1||end===-1)return null;
+  s=s.slice(start,end+1);
+  try{return JSON.parse(s);}catch{return null;}
+}
+
+function timeout(ms){return new Promise((_,rej)=>setTimeout(()=>rej(new Error(`timeout after ${ms/1000}s`)),ms));}
+function sleep(ms){return new Promise(r=>setTimeout(r,ms));}
+
+function emptyData(name){
+  const y1=S.year1,y2=S.year2;
+  return {company:name,[`scope1_${y1}`]:null,[`scope1_${y2}`]:null,[`scope2_mb_${y1}`]:null,[`scope2_mb_${y2}`]:null,[`scope2_lb_${y1}`]:null,[`scope2_lb_${y2}`]:null,[`scope3_total_${y1}`]:null,[`scope3_total_${y2}`]:null,[`s3_cat1_${y1}`]:null,[`s3_cat1_${y2}`]:null,[`s3_cat2_${y1}`]:null,[`s3_cat2_${y2}`]:null,[`s3_cat3_${y1}`]:null,[`s3_cat3_${y2}`]:null,[`s3_cat4_${y1}`]:null,[`s3_cat4_${y2}`]:null,[`s3_cat5_${y1}`]:null,[`s3_cat5_${y2}`]:null,[`s3_cat6_${y1}`]:null,[`s3_cat6_${y2}`]:null,[`s3_cat7_${y1}`]:null,[`s3_cat7_${y2}`]:null,[`s3_cat8_${y1}`]:null,[`s3_cat8_${y2}`]:null,revenue_eur_millions:null,revenue_year:null,revenue_source:null,fte:null,fte_year:null,fte_source:null,comment_scope1:'',comment_scope2_mb:'',comment_scope3:'',cdp_above_f:'No',cdp_score:'No data',public_report:'Yes',public_inventory:null,upstream_s3_complete:null,downstream_s3_complete:null,s3_applicability:null,s3_methodology:null,s1s2_targets:null,s3_targets:null,sbti_near:null,sbti_netzero:null,s1_reductions:null,s2_reductions:null,s3_reductions:null,reported_progress:null,detail_public_inventory:'',detail_upstream_s3:'',detail_downstream_s3:'',detail_s3_applicability:'',detail_s3_methodology:'',detail_s1s2_targets:'',detail_s3_targets:'',detail_sbti_near:'',detail_sbti_netzero:'',detail_s1_reductions:'',detail_s2_reductions:'',detail_s3_reductions:'',detail_progress:'',source_public_report:'',source_public_inventory:'',source_upstream_s3:'',source_downstream_s3:''};
+}
+
+// ── REVIEW ────────────────────────────────────────────────────────────────────
+function renderReview(){
+  const tabsEl=document.getElementById('companyTabs');
+  const contEl=document.getElementById('companyTabContents');
+  tabsEl.innerHTML=''; contEl.innerHTML='';
+  S.companies.forEach((co,i)=>{
+    const d=S.extracted[co.name]||emptyData(co.name);
+    const ch=S.checked[co.name]||{confidence:'low',issues:[]};
+    const btn=document.createElement('button');
+    btn.className='tab-btn'+(i===0?' active':'');
+    btn.textContent=co.name;
+    btn.onclick=()=>{document.querySelectorAll('.tab-btn').forEach(b=>b.classList.remove('active'));document.querySelectorAll('.tab-content').forEach(b=>b.classList.remove('active'));btn.classList.add('active');document.getElementById('tc-'+i).classList.add('active');};
+    tabsEl.appendChild(btn);
+    const div=document.createElement('div');
+    div.className='tab-content'+(i===0?' active':'');
+    div.id='tc-'+i;
+    const cc=ch.confidence==='high'?'conf-high':ch.confidence==='medium'?'conf-med':'conf-low';
+    div.innerHTML=`
+      <div style="display:flex;align-items:center;gap:10px;margin-bottom:12px">
+        <span class="badge ${co.role==='client'?'badge-blue':'badge-gray'}">${co.role}</span>
+        <span class="conf-badge ${cc}">Agent 2: ${ch.confidence||'unknown'} confidence</span>
+        ${ch.issues&&ch.issues.length?`<span class="badge badge-amber">${ch.issues.length} issue(s)</span>`:'<span class="badge badge-green">verified</span>'}
+      </div>
+      ${ch.issues&&ch.issues.length?`<div class="checker-panel" style="margin-bottom:16px">${ch.issues.map(x=>`<div class="checker-row"><span style="color:var(--amber);margin-right:6px">⚠</span>${x}</div>`).join('')}${ch.notes?`<div class="checker-row" style="border:none;color:var(--muted)">ℹ ${ch.notes}</div>`:''}</div>`:''}
+      <table class="data-table">
+        <thead><tr><th>Emissions field</th><th>${S.year1}</th><th>${S.year2}</th><th>Comment / source</th></tr></thead>
+        <tbody>${emissionsRows(co.name,d)}</tbody>
+      </table>
+      <hr class="divider">
+      <table class="data-table">
+        <thead><tr><th>Scoring question</th><th>Answer</th><th>Evidence / detail</th><th>Source</th></tr></thead>
+        <tbody>${scoringRows(co.name,d)}</tbody>
+      </table>`;
+    contEl.appendChild(div);
+  });
+}
+
+function ei(name,key,val){return `<input type="text" value="${val??''}" oninput="S.extracted['${name}']['${key}']=this.value||null"/>`;}
+
+function emissionsRows(n,d){
+  const y1=S.year1,y2=S.year2;
+  return [
+    ['Scope 1',`scope1_${y1}`,`scope1_${y2}`,'comment_scope1'],
+    ['Scope 2 market-based',`scope2_mb_${y1}`,`scope2_mb_${y2}`,'comment_scope2_mb'],
+    ['Scope 2 location-based',`scope2_lb_${y1}`,`scope2_lb_${y2}`,''],
+    ['Scope 3 total',`scope3_total_${y1}`,`scope3_total_${y2}`,'comment_scope3'],
+    ['S3 Cat 1 Purchased goods',`s3_cat1_${y1}`,`s3_cat1_${y2}`,''],
+    ['S3 Cat 2 Capital goods',`s3_cat2_${y1}`,`s3_cat2_${y2}`,''],
+    ['S3 Cat 3 Fuel & energy',`s3_cat3_${y1}`,`s3_cat3_${y2}`,''],
+    ['S3 Cat 4 Upstream transport',`s3_cat4_${y1}`,`s3_cat4_${y2}`,''],
+    ['S3 Cat 5 Waste',`s3_cat5_${y1}`,`s3_cat5_${y2}`,''],
+    ['S3 Cat 6 Business travel',`s3_cat6_${y1}`,`s3_cat6_${y2}`,''],
+    ['S3 Cat 7 Employee commuting',`s3_cat7_${y1}`,`s3_cat7_${y2}`,''],
+    ['S3 Cat 8 Upstream leased',`s3_cat8_${y1}`,`s3_cat8_${y2}`,''],
+    ['Revenue (mn EUR)','revenue_eur_millions','revenue_year','revenue_source'],
+    ['FTE','fte','fte_year','fte_source'],
+  ].map(([l,k1,k2,kc])=>`<tr><td style="color:var(--muted)">${l}</td><td>${ei(n,k1,d[k1])}</td><td>${ei(n,k2,d[k2])}</td><td>${kc?ei(n,kc,d[kc]):''}</td></tr>`).join('');
+}
+
+function scoringRows(n,d){
+  return [
+    ['CDP above F','cdp_above_f','detail_public_inventory',''],
+    ['CDP Score','cdp_score','',''],
+    ['Public sustainability report','public_report','source_public_report',''],
+    ['Public availability of inventory','public_inventory','detail_public_inventory','source_public_inventory'],
+    ['Complete upstream S3','upstream_s3_complete','detail_upstream_s3','source_upstream_s3'],
+    ['Complete downstream S3','downstream_s3_complete','detail_downstream_s3','source_downstream_s3'],
+    ['S3 applicability explained','s3_applicability','detail_s3_applicability',''],
+    ['S3 methodology explained','s3_methodology','detail_s3_methodology',''],
+    ['S1 & S2 reduction targets','s1s2_targets','detail_s1s2_targets',''],
+    ['S3 reduction targets','s3_targets','detail_s3_targets',''],
+    ['Near-term SBTi','sbti_near','detail_sbti_near',''],
+    ['Net zero SBTi','sbti_netzero','detail_sbti_netzero',''],
+    ['S1 reductions evidenced','s1_reductions','detail_s1_reductions',''],
+    ['S2 reductions evidenced','s2_reductions','detail_s2_reductions',''],
+    ['S3 reductions evidenced','s3_reductions','detail_s3_reductions',''],
+    ['Progress reported','reported_progress','detail_progress',''],
+  ].map(([l,ka,kd,ks])=>`<tr><td style="color:var(--muted)">${l}</td><td>${ei(n,ka,d[ka])}</td><td>${kd?ei(n,kd,d[kd]):''}</td><td>${ks?ei(n,ks,d[ks]):''}</td></tr>`).join('');
+}
+
+// ── EXPORT ────────────────────────────────────────────────────────────────────
+function goToExport(){goTo(5);document.getElementById('exportLog').innerHTML='<div class="log-ok">Ready — click buttons below to download.</div>';}
+
+function pn(v){if(v==null||v===''||v==='N/A')return null;const n=parseFloat(String(v).replace(/,/g,''));return isNaN(n)?null:n;}
+
+function downloadExcel(){
+  const log=document.getElementById('exportLog');
+  try{
+    const wb=XLSX.utils.book_new();
+    const y1=S.year1,y2=S.year2;
+    // Instructions
+    const wsI=XLSX.utils.aoa_to_sheet([['Benchmarking excel template '],[],['1. Use Scoring explanation to see how we get to the scores '],['2. Fill out Company A information for your client'],['3. Use Competitor 1 for competitors and duplicate this'],['4. Use intensity comparison to copy into the powerpoint'],['5. Scores are only based on publicly available information'],['6. Do not use CDP as a source. Only include CDP if mentioned in the sustainability report.']]);
+    XLSX.utils.book_append_sheet(wb,wsI,'Instructions');
+
+    S.companies.forEach((co,idx)=>{
+      const d=S.extracted[co.name]||emptyData(co.name);
+      const sName=idx===0?'Client Name':`Competitor ${idx}`;
+      XLSX.utils.book_append_sheet(wb,buildSheet(co.name,d,y1,y2),sName);
+      log.innerHTML+=`<div class="log-ok">Sheet: ${sName} (${co.name})</div>`;
+    });
+    XLSX.writeFile(wb,`BG_Benchmarking_${S.client}_${y2}.xlsx`);
+    log.innerHTML+='<div class="log-ok">Excel downloaded.</div>';
+  }catch(e){log.innerHTML+=`<div class="log-err">Error: ${e.message}</div>`;}
+}
+
+function buildSheet(name,d,y1,y2){
+  const ws={};
+  const c=(r,col,v)=>{const a=XLSX.utils.encode_cell({r:r-1,c:col-1});ws[a]=typeof v==='number'?{v,t:'n'}:{v:String(v??''),t:'s'};};
+  const f=(r,col,formula)=>{const a=XLSX.utils.encode_cell({r:r-1,c:col-1});ws[a]={f:formula,t:'n'};};
+
+  // Row 1 headers
+  c(1,1,'Year of Carbon inventory');c(1,2,y1);c(1,3,y2);c(1,4,'YoY change');c(1,5,'Comment');c(1,7,'Intensity metrics');c(1,9,'Year of source');c(1,10,'Source');c(1,11,'Conversion date for Revenue');
+  // Row 2
+  c(2,1,'Category ');c(2,2,'tCO2e ');c(2,3,'tCO2e ');c(2,4,'%');c(2,7,'Revenue (million EUR)');
+  const rev=pn(d.revenue_eur_millions);if(rev!=null)c(2,8,rev);if(d.revenue_year)c(2,9,d.revenue_year);if(d.revenue_source)c(2,10,d.revenue_source);
+  // Row 3: Scope 1 total row (formula sums B4:B6)
+  c(3,1,'Scope 1 - Total');f(3,2,'sum(B4:B6)');f(3,3,'sum(C4:C6)');f(3,4,'(C3-B3)/B3');
+  c(3,7,'FTE');const fte=pn(d.fte);if(fte!=null)c(3,8,fte);if(d.fte_year)c(3,9,d.fte_year);if(d.fte_source)c(3,10,d.fte_source);
+  // Row 4: Scope 1 TOTAL goes here — B4/C4 (sub-rows 5,6 = N/A)
+  c(4,1,'Mobile Combustion');
+  const s1y1=pn(d[`scope1_${y1}`]);const s1y2=pn(d[`scope1_${y2}`]);
+  c(4,2,s1y1??0);c(4,3,s1y2??0);f(4,4,'(C4-B4)/B4');
+  c(5,1,'Stationary Combustion');c(5,2,'N/A');c(5,3,'N/A');f(5,4,'(C5-B5)/B5');c(5,8,'tCO2e/Revenue');c(5,9,'tCO2e/FTE');
+  c(6,1,'Fugitive Emissions ');c(6,2,'N/A');c(6,3,'N/A');f(6,4,'(C6-B6)/B6');c(6,7,'Scope 1');f(6,8,'C3/H2');f(6,9,'C3/H3');
+  // Row 7: Scope 2 MB (formula sums B8:B9)
+  c(7,1,'Scope 2 - Total (Market based) ');f(7,2,'sum(B8:B9)');f(7,3,'sum(C8:C9)');f(7,4,'(C7-B7)/B7');
+  if(d.comment_scope2_mb)c(7,5,d.comment_scope2_mb);c(7,7,'Scope 2 (market based)');f(7,8,'C7/H2');f(7,9,'C7/H3');
+  // Row 8: Scope 2 MB TOTAL goes here — B8/C8 (row 9 = N/A)
+  c(8,1,'Electricity ');
+  const s2mby1=pn(d[`scope2_mb_${y1}`]);const s2mby2=pn(d[`scope2_mb_${y2}`]);
+  c(8,2,s2mby1??0);c(8,3,s2mby2??0);f(8,4,'(C8-B8)/B8');c(8,7,'Scope 3 ');f(8,8,'C13/H2');f(8,9,'C13/H3');
+  c(9,1,'Heat');c(9,2,'N/A');c(9,3,'N/A');f(9,4,'(C9-B9)/B9');c(9,7,'Total (market based) ');f(9,8,'C31/H2');f(9,9,'C31/H3');
+  // Row 10: Scope 2 LB
+  c(10,1,'Scope 2 - Total (Location based) ');f(10,2,'sum(B11:B12)');f(10,3,'sum(C11:C12)');f(10,4,'(C10-B10)/B10');
+  c(11,1,'Electricity ');const s2lby1=pn(d[`scope2_lb_${y1}`]);const s2lby2=pn(d[`scope2_lb_${y2}`]);
+  c(11,2,s2lby1??0);c(11,3,s2lby2??0);f(11,4,'(C11-B11)/B11');
+  c(12,1,'Heat');c(12,2,'N/A');c(12,3,'N/A');f(12,4,'(C12-B12)/B12');c(12,7,'YoY Chart');c(12,8,y1);c(12,9,y2);c(12,10,'%');
+  // Row 13: Scope 3 total
+  c(13,1,'Scope 3 - Total');f(13,2,'sum(B14,B23)');f(13,3,'sum(C14,C23)');f(13,4,'(C13-B13)/B13');
+  if(d.comment_scope3)c(13,5,d.comment_scope3);c(13,7,'Scope 1 - Total');f(13,8,'B3');f(13,9,'C3');f(13,10,'D3');
+  // Row 14: Upstream S3 total
+  c(14,1,'Upstream Scope 3 - Total');f(14,2,'sum(B15:B22)');f(14,3,'sum(C15:C22)');f(14,4,'(C14-B14)/B14');
+  c(14,7,'Scope 2 MB');f(14,8,'B7');f(14,9,'C7');f(14,10,'D7');
+  // S3 categories 1-8 rows 15-22
+  ['1. Purchased goods and services','2. Capital goods','3. Fuel- and energy-related activities','4. Upstream transportation and distribution','5. Waste generated in operations','6. Business travel','7. Employee commuting','8. Upstream leased assets'].forEach((lbl,i)=>{
+    const row=15+i,key=i+1;c(row,1,lbl);
+    const v1=pn(d[`s3_cat${key}_${y1}`]);const v2=pn(d[`s3_cat${key}_${y2}`]);
+    if(v1!=null)c(row,2,v1);if(v2!=null)c(row,3,v2);f(row,4,`(C${row}-B${row})/B${row}`);
+  });
+  c(15,7,'Scope 3 - Total');f(15,8,'B13');f(15,9,'C13');f(15,10,'D13');
+  c(16,7,'Total emissions');f(16,8,'B31');f(16,9,'C31');f(16,10,'D31');
+  // Row 23: Downstream S3 total
+  c(23,1,'Downstream Scope 3 - Total');f(23,2,'sum(B24:B30)');f(23,3,'sum(C24:C30)');f(23,4,'(C23-B23)/B23');
+  ['9. Downstream transportation and distribution','10. Processing of sold products','11. Use of sold products','12. End-of-life treatment of sold products','13. Downstream leased assets','14. Franchises','15. Investments'].forEach((lbl,i)=>{const row=24+i;c(row,1,lbl);f(row,4,`(C${row}-B${row})/B${row}`);});
+  // Row 31: Total
+  c(31,1,'Total emissions (Market Based) ');f(31,2,'B13+B7+B3');f(31,3,'C13+C7+C3');f(31,4,'(C31-B31)/B31');
+  // Row 33: name, row 34: headers
+  c(33,1,name);
+  c(34,1,'Benchmarking questions');c(34,2,'Answer options');c(34,3,'Score carbon accounting and target maturity');c(34,4,'Score Market leadership');c(34,5,'Further details to disclose ');c(34,6,'Source ');
+  // Scoring rows 35-50 with formulas
+  const sa=[
+    [35,'CDP disclosure above F',d.cdp_above_f||'No','D','','Do not use CDP as a source in this document. Only include CDP if it is mentioned in the sustainability report.',''],
+    [36,'CDP Score',d.cdp_score||'No data','D','','Do not use CDP as a source in this document. Only include CDP if it is mentioned in the sustainability report.',''],
+    [37,'Public sustainability report',d.public_report||'Yes','D','',d.detail_public_inventory||'Link report ',d.source_public_report||''],
+    [38,'Public availability of inventory ',d.public_inventory||'','C','',d.detail_public_inventory||'Disclose in table in sheet per company',d.source_public_inventory||''],
+    [39,'Complete Upstream S3 emissions inventory',d.upstream_s3_complete||'','C','',d.detail_upstream_s3||'',d.source_upstream_s3||''],
+    [40,'Complete Downstream S3 emissions inventory',d.downstream_s3_complete||'','C','',d.detail_downstream_s3||'',d.source_downstream_s3||''],
+    [41,'Transparency on inventory - Detailed explanations on applicability of S3 categories ',d.s3_applicability||'','C','',d.detail_s3_applicability||'Provide further information from sust report',''],
+    [42,'Transparency on inventory - Explanation of calculation methodology & databases used ',d.s3_methodology||'','C','',d.detail_s3_methodology||'',''],
+    [43,'Do they have publicly available S1 and S2 reductions targets?',d.s1s2_targets||'','C','',d.detail_s1s2_targets||'Description of targets ',''],
+    [44,'Do they have publicly available S3 reductions targets?',d.s3_targets||'','C','',d.detail_s3_targets||'Description of targets ',''],
+    [45,'Near term SBTi targets',d.sbti_near||'','C','',d.detail_sbti_near||'Description of targets ',''],
+    [46,'Net Zero SBTi targets',d.sbti_netzero||'','C','',d.detail_sbti_netzero||'Description of targets ',''],
+    [47,'Have they claimed to have made any reductions that are backed up with data / evidence in S1?',d.s1_reductions||'','C','',d.detail_s1_reductions||'Further explanation',''],
+    [48,'Have they claimed to have made any reductions that are backed up with data / evidence in S2?',d.s2_reductions||'','C','',d.detail_s2_reductions||'Further explanation',''],
+    [49,'Have they claimed to have made any reductions that are backed up with data / evidence in S3?',d.s3_reductions||'','C','',d.detail_s3_reductions||'Further explanation',''],
+    [50,'Have they reported on progress towards set targets in their sustainability report?',d.reported_progress||'','C','D',d.detail_progress||'Further explanation',''],
+  ];
+  const sf={
+    35:{D:`IF(B35="yes", 5, IF(B35="no", 0, ""))`},
+    36:{D:`IF(B36="No data", 0, IF(B36="A", 5, IF(B36="B", 4, IF(B36="C", 3, IF(B36="D", 2, IF(B36="E", 1, IF(B36="F", 0, )))))))`},
+    37:{D:`IF(B37="yes", 5, IF(B37="no", 0, ""))`},
+    38:{C:`IF(B38="yes", 5, IF(B38="no", 0, ""))`},
+    39:{C:`IF(B39="yes", 5, IF(B39="no", 0, ""))`},
+    40:{C:`IF(B40="yes", 5, IF(B40="no", 0, ""))`},
+    41:{C:`IF(B41="yes", 5, IF(B41="no", 0, ""))`},
+    42:{C:`IF(B42="yes", 5, IF(B42="no", 0, ""))`},
+    43:{C:`IF(B43="yes", 5, IF(B43="no", 0, ""))`},
+    44:{C:`IF(B44="yes", 5, IF(B44="no", 0, ""))`},
+    45:{C:`IF(B45="Yes", 10, IF(B45="Aligned", 8, IF(B45="Committed", 5, IF(B45="Removed", 0, IF(B45="No", 0, "")))))`},
+    46:{C:`IF(B46="Yes", 10, IF(B46="Aligned", 8, IF(B46="Committed", 5, IF(B46="Removed", 0, IF(B46="No", 0, "")))))`},
+    47:{C:`IF(B47="", "", IFS(B47="Reached target",5,B47="Over 75%",4,B47="Over 50%",3,B47="Over 25%",2,B47="Over 10%",1,B47="0-10%",0,B47="Increase",-1))`},
+    48:{C:`IF(B48="", "", IFS(B48="Reached target",5,B48="Over 75%",4,B48="Over 50%",3,B48="Over 25%",2,B48="Over 10%",1,B48="0-10%",0,B48="Increase",-1))`},
+    49:{C:`IF(B49="", "", IFS(B49="Reached target",5,B49="Over 75%",4,B49="Over 50%",3,B49="Over 25%",2,B49="Over 10%",1,B49="0-10%",0,B49="Increase",-1))`},
+    50:{C:`IF(B50="All 3 scopes",5,IF(B50="2 scopes",2.5,IF(B50="1 scope",1,IF(B50="None",0,""))))`,D:`IF(B50="All 3 scopes",5,IF(B50="2 scopes",2.5,IF(B50="1 scope",1,IF(B50="None",0,""))))`},
+  };
+  sa.forEach(([row,q,ans,sc1,sc2,detail,src])=>{
+    c(row,1,q);c(row,2,ans);if(detail)c(row,5,detail);if(src)c(row,6,src);
+    if(sf[row]){if(sf[row].C)f(row,3,sf[row].C);if(sf[row].D)f(row,4,sf[row].D);}
+  });
+  c(51,1,'Total ');f(51,3,'sum(C35:C50)');f(51,4,'SUM(D35:D50)');
+  c(52,1,'Total out of total marks available');f(52,3,'C51/75');f(52,4,'D51/20');
+  ws['!ref']='A1:K52';
+  return ws;
+}
+
+function downloadCSV(){
+  const y2=S.year2;
+  const hdr=['SUPPLIER NAME','WEBSITE','ID/VAT','INDUSTRY','SIZE','COUNTRY CODE','EMISSION PERIOD START','EMISSION PERIOD END','SOURCE','SCOPE 1','SCOPE 2 LB','SCOPE 2 MB','SCOPE 2 UNKNOWN','SCOPE 3 TOTAL','SCOPE 3 UPSTREAM','SCOPE 3 CATEGORIES INCLUDED','3.1 PURCHASED GOODS AND SERVICES','3.2 CAPITAL GOODS','3.3 FUEL AND ENERGY RELATED ACTIVITIES','3.4 UPSTREAM TRANSPORT','3.5 WASTE','3.6 BUSINESS TRAVEL','3.7 EMPLOYEE COMMUTING','3.8 UPSTREAM LEASED ASSETS','SCOPE 1 INTENSITY','SCOPE 2 LB INTENSITY','SCOPE 2 MB INTENSITY','SCOPE 2 UNKNOWN INTENSITY','SCOPE 3 TOTAL INTENSITY','SCOPE 3 UPSTREAM INTENSITY','REVENUE','REVENUE UNIT','HAS TARGETS','TARGET TYPE','SBTI STAGE','BASE YEAR','S1 BASE','S2 BASE','S3 BASE','SCOPE 1 TARGET','SCOPE 2 TARGET','SCOPE 1 + 2 TARGET','SCOPE 3 TARGET','ALL SCOPES TARGET','OTHER TARGETS'];
+  const rows=[hdr];
+  S.companies.forEach(co=>{
+    const d=S.extracted[co.name]||{};
+    const hasT=(d.s1s2_targets==='Yes'||d.s3_targets==='Yes')?'yes':'no';
+    const sbtiStg=d.sbti_near&&d.sbti_near!=='No'?d.sbti_near.toLowerCase():'';
+    rows.push([co.name,'','','Technology','','WW',`01/01/${y2}`,`31/12/${y2}`,S.companies.find(x=>x.name===co.name)?.url||'',d[`scope1_${y2}`]??'',d[`scope2_lb_${y2}`]??'',d[`scope2_mb_${y2}`]??'','',d[`scope3_total_${y2}`]??'','',
+      [1,2,3,4,5,6,7,8].filter(k=>d[`s3_cat${k}_${y2}`]!=null).map(k=>`3.${k}`).join(','),
+      d[`s3_cat1_${y2}`]??'',d[`s3_cat2_${y2}`]??'',d[`s3_cat3_${y2}`]??'',d[`s3_cat4_${y2}`]??'',d[`s3_cat5_${y2}`]??'',d[`s3_cat6_${y2}`]??'',d[`s3_cat7_${y2}`]??'',d[`s3_cat8_${y2}`]??'',
+      '','','','','','',d.revenue_eur_millions??'','EUR millions',hasT,hasT==='yes'?'SBTI':'',sbtiStg,'','','','',
+      d.s1s2_targets==='Yes'?'Yes':'',d.s1s2_targets==='Yes'?'Yes':'','',d.s3_targets==='Yes'?'Yes':'','','']);
+  });
+  const csv=rows.map(r=>r.map(v=>`"${String(v).replace(/"/g,'""')}"`).join(',')).join('\n');
+  const a=document.createElement('a');a.href=URL.createObjectURL(new Blob([csv],{type:'text/csv'}));a.download=`Normative_BulkUpload_${S.client}_${y2}.csv`;a.click();
+  document.getElementById('exportLog').innerHTML+='<div class="log-ok">Normative CSV downloaded.</div>';
+}
+</script>
+</body>
+</html>
